@@ -3,6 +3,9 @@ package com.example.demo.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.Category;
+import com.example.demo.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.model.Product;
@@ -13,8 +16,12 @@ public class ProductService {
 
     private final ProductRepository repo;
 
-    public ProductService(ProductRepository repo){
+    private final CategoryRepository repoCategory;
+
+
+    public ProductService(ProductRepository repo, CategoryRepository repoCategory) {
         this.repo=repo;
+        this.repoCategory=repoCategory;
     }
 
     public List<Product> findAll(){
@@ -25,14 +32,24 @@ public class ProductService {
         return repo.findById(id);
     }
 
-    public Product  save(Product product){
-        return repo.save(product);
+    public Product  save(Product product, Long id){
+            Category category = repoCategory.findById(id).orElseThrow();
+            product.setCategory(category);
+            return repo.save(product);
     }
 
-    public Optional<Product> update(long id, Product newProduct){
-        Optional<Product> optional=repo.findById(id);
-        Product productBd=optional.get();
-        productBd.setName(newProduct.getName());
+    public Optional<Product> update(long id, Product newProduct, Long categoryId){
+        Product productBd=repo.findById(id).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Product not found with id " + id)
+        );
+
+        Category category = repoCategory.findById(categoryId).orElseThrow(
+                ()->
+                        new ResourceNotFoundException("Category not found ehit id" + categoryId)
+        );
+        //Product productBd=optional.get();
+        productBd.setName(newProduct.getName() + "");
         productBd.setPrice(newProduct.getPrice());
         productBd.setStock(newProduct.getStock());
         return Optional.of(repo.save(productBd));

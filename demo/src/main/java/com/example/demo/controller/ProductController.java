@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.example.demo.dto.ProductRequest;
 import com.example.demo.dto.ProductResponse;
 import com.example.demo.model.Product;
@@ -23,10 +22,11 @@ import com.example.demo.service.ProductService;
 import jakarta.validation.Valid;
 
 
-@RestController 
+
+
+@RestController
 @RequestMapping("/products")
 public class ProductController {
-
     private final ProductService service;
 
     public ProductController(ProductService service){
@@ -36,68 +36,57 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> fidnAll() {
-
-        List <ProductResponse> list = new ArrayList<>();
-        for (Product elem : service.findAll()){
+        List<ProductResponse> list = new ArrayList<>();
+        for (Product elem : service.findAll()) {
             list.add(toResponse(elem));
         }
-        
-
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity <ProductResponse> finById(@PathVariable Long id) {
-        Optional<Product> product=service.findById(id);
+    public ResponseEntity<ProductResponse> findById(@PathVariable Long id) {
+        Optional<Product> product = service.findById(id);
         if(product.isEmpty()){
-            ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok(toResponse(product.get()));
     }
-
     @PostMapping
-    public ResponseEntity<ProductResponse> savde(@Valid @RequestBody ProductRequest product){
-        //TODO: process POST request
-        Product saved=  service.save( toEntity(product));
-        // Product newProduct = service.save(toResponse(saved));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
+    public ResponseEntity<ProductResponse> save(@Valid @RequestBody ProductRequest product) {
+        Product newProduct = service.save(toEntity(product),product.categoryId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(newProduct));
     }
-
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> update(@PathVariable Long id, @Valid  @RequestBody ProductRequest productUpdated){
-        //TODO: process PUT request
-        Optional<Product> product= service.update(id, toEntity(productUpdated));
+    public  ResponseEntity<ProductResponse> update(@PathVariable Long id,@Valid  @RequestBody ProductRequest productUpdate) {
+        Optional<Product> product= service.update(id,
+                toEntity(productUpdate),
+                productUpdate.categoryId()
+        );
         if(product.isPresent()){
             return ResponseEntity.ok(toResponse(product.get()));
         }
+
         return ResponseEntity.notFound().build();
     }
-
-    @DeleteMapping("/{id}")
+    @DeleteMapping ("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id){
-        boolean delete = service.delete(id);
-        if(!delete){
+        boolean deleted = service.delete(id);
+        if(!deleted){
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
     }
 
     private ProductResponse toResponse(Product product){
-        return new ProductResponse(product.getId(), product.getName(), product.getPrice(), product.getStock());
+        return new ProductResponse(product.getId(),product.getName(),product.getPrice(),product.getStock(),"",0L);
     }
 
-    private Product toEntity(ProductRequest product ){
+    private Product toEntity(ProductRequest product){
         Product productEntity = new Product();
         productEntity.setName(product.name());
         productEntity.setPrice(product.price());
         productEntity.setStock(product.stock());
         return productEntity;
     }
-
-
-
-
 }
-
-

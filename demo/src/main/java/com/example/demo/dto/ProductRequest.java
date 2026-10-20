@@ -6,14 +6,15 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 public record ProductRequest(
-    @NotBlank 
-    String name, 
-    @Positive 
-    @NotNull 
-    Double price,
-    @PositiveOrZero 
-    @NotNull 
-    int stock
+        @NotBlank
+        String name,
+        @Positive
+        @NotNull
+        Double price,
+        @NotNull
+        @PositiveOrZero
+        Integer stock,
+        @NotNull
+        Long categoryId
 ) {
-
 }
